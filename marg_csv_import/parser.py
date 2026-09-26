@@ -11,12 +11,13 @@ Design goals:
 
 Public API (re-exported from the package root):
   detect_columns(header_row)  -> {canonical_key: column_index}
-  parse_expiry(raw)           -> "YYYY-MM-01" or None
+  parse_expiry(raw)           -> "YYYY-MM-DD" (last day of the month) or None
   parse_csv(path_or_file)     -> iterator of normalized dicts
 """
 
 from __future__ import annotations
 
+import calendar
 import csv
 import io
 import re
@@ -111,14 +112,25 @@ _RE_ISO = re.compile(r"^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$")   # 2027-07[-31]
 
 
 def parse_expiry(raw: Optional[str]) -> Optional[str]:
-    """Parse an expiry cell into ISO ``YYYY-MM-01``, or None if unparseable.
+    """Parse an expiry cell into ISO ``YYYY-MM-DD``, or None if unparseable.
+
+    A pharmacy pack prints a MONTH, never a day ("EXP 08/2026"), and stock
+    printed that way is legally sellable through the LAST day of that month
+    — 31 August, not 1 August. So every format below resolves to the last
+    day of the month, with one exception: a strict ``YYYY-MM-DD`` cell (an
+    export that already carries a real, source-system date) keeps its own
+    day rather than being overwritten. A ``DD.MM.YYYY`` cell's day is
+    dropped for the same reason a pack's day is dropped — the source is
+    still a monthly expiry, however the exporting software chose to print
+    it, and guessing which day it meant is worse than not storing one.
 
     Supported formats (all seen in real Marg/eVitalRx/Vyapar exports):
-      MM/YY       "07/27"
-      MMM-YY      "Jul-27", "JUL 2027"
-      DD.MM.YYYY  "31.07.2027"
-      ISO         "2027-07-31", "2027-07"
-      MM-YYYY     "07-2027", "07/2027"
+      MM/YY       "07/27"            -> last day of Jul 2027
+      MMM-YY      "Jul-27", "JUL 2027" -> last day of Jul 2027
+      DD.MM.YYYY  "31.07.2027"       -> last day of Jul 2027 (day dropped)
+      ISO         "2027-07-31"       -> 2027-07-31 (day kept)
+      ISO         "2027-07"          -> last day of Jul 2027
+      MM-YYYY     "07-2027", "07/2027" -> last day of Jul 2027
     """
     if raw is None:
         return None
@@ -128,6 +140,7 @@ def parse_expiry(raw: Optional[str]) -> Optional[str]:
 
     month: Optional[int] = None
     year: Optional[int] = None
+    day: Optional[int] = None
 
     if match := _RE_MM_YY.match(text):
         month, year = int(match.group(1)), 2000 + int(match.group(2))
@@ -137,6 +150,8 @@ def parse_expiry(raw: Optional[str]) -> Optional[str]:
         month, year = int(match.group(2)), int(match.group(3))
     elif match := _RE_ISO.match(text):
         year, month = int(match.group(1)), int(match.group(2))
+        if match.group(3):
+            day = int(match.group(3))
     elif match := _RE_MMM_YY.match(text):
         month = _MONTH_NAMES.get(match.group(1)[:3].lower())
         raw_year = int(match.group(2))
@@ -146,7 +161,11 @@ def parse_expiry(raw: Optional[str]) -> Optional[str]:
         return None
     if not (1 <= month <= 12) or not (2000 <= year <= 2099):
         return None
-    return f"{year:04d}-{month:02d}-01"
+    if day is None:
+        day = calendar.monthrange(year, month)[1]
+    elif not (1 <= day <= calendar.monthrange(year, month)[1]):
+        return None
+    return f"{year:04d}-{month:02d}-{day:02d}"
 
 
 # ---------------------------------------------------------------------------
@@ -195,7 +214,7 @@ def parse_csv(path_or_file: Union[str, IO[str]]) -> Iterator[Dict[str, object]]:
         {
             "name": str,                 # always present, non-empty
             "batch": str | None,
-            "expiry_iso": str | None,    # "YYYY-MM-01"
+            "expiry_iso": str | None,    # "YYYY-MM-DD" (last day of month)
             "mrp": float | None,
             "qty": float | None,
             "hsn": str | None,

@@ -54,29 +54,29 @@ def test_detect_columns_partial_header():
 
 
 def test_parse_expiry_mm_slash_yy():
-    assert parse_expiry("07/27") == "2027-07-01"
-    assert parse_expiry("1/28") == "2028-01-01"
+    assert parse_expiry("07/27") == "2027-07-31"
+    assert parse_expiry("1/28") == "2028-01-31"
 
 
 def test_parse_expiry_mmm_dash_yy():
-    assert parse_expiry("Jul-27") == "2027-07-01"
-    assert parse_expiry("DEC-29") == "2029-12-01"
-    assert parse_expiry("Mar 2028") == "2028-03-01"
+    assert parse_expiry("Jul-27") == "2027-07-31"
+    assert parse_expiry("DEC-29") == "2029-12-31"
+    assert parse_expiry("Mar 2028") == "2028-03-31"
 
 
 def test_parse_expiry_dd_dot_mm_dot_yyyy():
-    assert parse_expiry("31.07.2027") == "2027-07-01"
-    assert parse_expiry("1.2.2028") == "2028-02-01"
+    assert parse_expiry("31.07.2027") == "2027-07-31"  # explicit day dropped: a pack has no day
+    assert parse_expiry("1.2.2028") == "2028-02-29"  # 2028 is a leap year
 
 
 def test_parse_expiry_iso():
-    assert parse_expiry("2027-07-31") == "2027-07-01"
-    assert parse_expiry("2027-07") == "2027-07-01"
+    assert parse_expiry("2027-07-31") == "2027-07-31"  # strict ISO keeps its own day
+    assert parse_expiry("2027-07") == "2027-07-31"
 
 
 def test_parse_expiry_mm_dash_yyyy():
-    assert parse_expiry("07-2027") == "2027-07-01"
-    assert parse_expiry("11/2028") == "2028-11-01"
+    assert parse_expiry("07-2027") == "2027-07-31"
+    assert parse_expiry("11/2028") == "2028-11-30"
 
 
 def test_parse_expiry_garbage_returns_none():
@@ -99,21 +99,21 @@ def _rows(csv_text):
 def test_parse_csv_normalizes_full_rows():
     csv_text = (
         "Item Name,Batch No,Exp Date,MRP,Qty,HSN,GST %\n"
-        "Paracetamol 500mg,B123,07/27,\"₹25.50\",100,3004,12\n"
-        "Amoxicillin 250mg,AX9,Jul-28,45,50,3004,12\n"
+        "Paracetamol 500mg,B123,07/27,\"₹25.50\",100,3004,5\n"
+        "Amoxicillin 250mg,AX9,Jul-28,45,50,3004,5\n"
     )
     rows = _rows(csv_text)
     assert len(rows) == 2
     assert rows[0] == {
         "name": "Paracetamol 500mg",
         "batch": "B123",
-        "expiry_iso": "2027-07-01",
+        "expiry_iso": "2027-07-31",
         "mrp": 25.5,
         "qty": 100.0,
         "hsn": "3004",
-        "gst_percent": 12.0,
+        "gst_percent": 5.0,
     }
-    assert rows[1]["expiry_iso"] == "2028-07-01"
+    assert rows[1]["expiry_iso"] == "2028-07-31"
 
 
 def test_parse_csv_skips_malformed_rows():
@@ -159,7 +159,7 @@ def test_parse_csv_skips_preamble_before_header():
     rows = _rows(csv_text)
     assert len(rows) == 1
     assert rows[0]["name"] == "Pantoprazole 40mg"
-    assert rows[0]["expiry_iso"] == "2028-05-01"
+    assert rows[0]["expiry_iso"] == "2028-05-31"
 
 
 def test_parse_csv_no_usable_header_yields_nothing():

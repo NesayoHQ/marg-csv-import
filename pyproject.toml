@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marg-csv-import"
-version = "0.1.0"
+version = "0.2.0"
 description = "Parse stock/inventory CSV exports from Indian pharmacy desktop software (Marg ERP, eVitalRx, Vyapar) into normalized dicts. Stdlib only."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -27,7 +27,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://nesayo.com"
-Repository = "https://github.com/nesayo/marg-csv-import"
+Repository = "https://github.com/Ankush-kadu/marg-csv-import"
 
 [tool.setuptools]
 packages = ["marg_csv_import"]
