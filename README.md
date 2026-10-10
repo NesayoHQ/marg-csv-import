@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-Nesayo is billing, stock and compliance software for Indian retail pharmacies that runs in the browser on any phone or computer ([nesayo.com](https://nesayo.com/?utm_source=github&utm_medium=readme&utm_campaign=marg_csv_import), [comparison with Marg ERP](https://nesayo.com/alternatives/marg-erp?utm_source=github&utm_medium=readme&utm_campaign=marg_csv_import)). This repository is a tiny, dependency-free Python library, maintained by the team behind it, that parses stock/inventory CSV exports from Indian pharmacy desktop software — **Marg ERP**, **eVitalRx**, **Vyapar** and similar — into clean, normalized Python dicts.
+Nesayo is billing, stock and compliance software for Indian retail pharmacies that runs in the browser on any phone or computer ([nesayo.com](https://nesayo.com/?utm_source=github&utm_medium=readme&utm_campaign=marg_csv_import), [comparison with Marg ERP](https://nesayo.com/alternatives/marg-erp?utm_source=github&utm_medium=readme&utm_campaign=marg_csv_import), [cloud alternative to Marg ERP](https://nesayo.com/v/marg-cloud-alternative?utm_source=github&utm_medium=readme&utm_campaign=marg_csv_import&utm_content=readme-intro)). This repository is a tiny, dependency-free Python library, maintained by the team behind it, that parses stock/inventory CSV exports from Indian pharmacy desktop software — **Marg ERP**, **eVitalRx**, **Vyapar** and similar — into clean, normalized Python dicts.
 
 ## Why
 
