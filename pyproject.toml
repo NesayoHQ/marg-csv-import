@@ -27,7 +27,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://nesayo.com"
-Repository = "https://github.com/Ankush-kadu/marg-csv-import"
+Repository = "https://github.com/NesayoHQ/marg-csv-import"
 
 [tool.setuptools]
 packages = ["marg_csv_import"]
